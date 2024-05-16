@@ -46,13 +46,28 @@ def transform_image_to_text(image):
     img_byte_arr = img_byte_arr.getvalue()
     encoded_image = base64.b64encode(img_byte_arr).decode('utf-8')
 
-    response = openai.ChatCompletion.create(
-        model="gpt-4",
-        messages=[
-            {"role": "system", "content": "You are an OCR to JSON expert looking to transcribe an image. If the type is 'other' please specify the type of object and classify as you see fit."},
-            {"role": "user", "content": f"Please transcribe this {transcribed_object} into a JSON only output for MongoDB store. Always have a 'name' and 'type' top field (type is a subdocument with user and 'ai_classified') as well as other fields as you see fit."},
-            {"role": "user", "content": {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{encoded_image}"}}}
-        ]
+    response = openai.chat.completions.create(
+        model="gpt-4o",
+        messages=[{
+        "role": "system",
+        "content": "You are an ocr to json expert looking to transcribe an image. If the type is 'other' please specify the type of object and clasiffy as you see fit."
+        },
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": f"Please trunscribe this {transcribed_object} into a json only output for MongoDB store. Always have a 'name' and 'type' top field (type is a subdocument with user and 'ai_classified') as well as other fields as you see fit."
+        },
+        {
+          "type": "image_url",
+          "image_url": {
+            "url": f"data:image/jpeg;base64,{encoded_image}"
+          }
+        }
+      ]
+    }
+  ]
     )
     extracted_text = response.choices[0].message.content
     return extracted_text
