@@ -108,7 +108,6 @@ def search_and_display_images(query):
         image_data = base64.b64decode(result['image'])
         image = Image.open(io.BytesIO(image_data))
         st.image(image, use_column_width=True)
-
 # Main app logic
 if not st.session_state.authenticated:
     auth_form()
@@ -126,23 +125,36 @@ else:
     transcribed_object = options[0] if options else "other"
     image = st.camera_input("Take a picture")
 
+    @st.experimental_dialog("Processed Document",width="large")
+    def show_dialog():
+        st.write(extracted_text)
+        if st.button("Confirm Save to MongoDB"):
+            
+
+        
+            save_image_to_mongodb(img, extracted_text)
+            st.rerun()
+            
+            
+
+
     if st.button("Save to MongoDB"):
         if image is not None:
             img = Image.open(io.BytesIO(image.getvalue()))
             extracted_text = transform_image_to_text(img)
-            st.write("Processed Document")
-            st.write(extracted_text)
-            if st.button("Confirm Save to MongoDB"):
-                save_image_to_mongodb(img, extracted_text)
-                st.experimental_rerun()
+            show_dialog()
+            
 
+    # Search functionality
     st.header("Recorded Documents")
     docs = list(collection.find())
 
     for doc in docs:
         expander = st.expander(f"{doc['ocr']['type']} '{doc['ocr']['name']}'")
-        expander.write(doc['ocr'])
-        if expander.button("Show Image", key=str(doc['_id'])):
+        expander.write(doc['ocr'])  # Ensure 'recipe' matches your MongoDB field name
+        ## collapseble image
+        
+        if expander.button("Show Image", key=doc['_id']):
             image_data = base64.b64decode(doc['image'])
             image = Image.open(io.BytesIO(image_data))
             expander.image(image, use_column_width=True)
