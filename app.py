@@ -138,7 +138,7 @@ else:
             
 
 
-    if st.button("Save to MongoDB"):
+    if st.button("Analyze image for MongoDB"):
         if image is not None:
             img = Image.open(io.BytesIO(image.getvalue()))
             extracted_text = transform_image_to_text(img)
