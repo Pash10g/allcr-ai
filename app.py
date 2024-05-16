@@ -147,8 +147,27 @@ else:
 
     # Search functionality
     st.header("Recorded Documents")
-    docs = list(collection.find())
+    
 
+    ## Adding search bar
+    search_query = st.text_input("Search for documents")
+
+    if search_query:
+        docs = list(collection.aggregate([
+        {
+            "$search": {
+            "index": "search",
+            "text": {
+                "query": search_query,
+                "path": {
+                "wildcard": "*"
+                }
+            }
+            }
+        }
+        ]))
+    else:
+        docs = list(collection.find())
     for doc in docs:
         expander = st.expander(f"{doc['ocr']['type']} '{doc['ocr']['name']}'")
         expander.write(doc['ocr'])  # Ensure 'recipe' matches your MongoDB field name
