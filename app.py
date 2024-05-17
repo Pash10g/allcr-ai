@@ -161,7 +161,8 @@ else:
                 "query": search_query,
                 "path": {
                 "wildcard": "*"
-                }
+                },
+                "fuzzy" : { "maxEdits" : 2 }
             }
             }
         }
