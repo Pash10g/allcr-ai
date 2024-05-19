@@ -15,27 +15,34 @@ from haystack.utils import Secret
 openai.api_key = os.environ.get("OPENAI_API_KEY")
 
 API_CODE = os.environ.get("API_CODE")
+# MongoDB connection
+client = MongoClient(os.environ.get("MONGODB_ATLAS_URI"))
+db = client['ocr_db']
+collection = db['ocr_documents']
 
+
+auth_collection=db['api_keys']
 # Initialize session state for authentication
 if 'authenticated' not in st.session_state:
     st.session_state.authenticated = False
 
 def auth_form():
+    
     st.title("Authentication")
     st.write("Please enter the API code to access the application.")
     api_code = st.text_input("API Code", type="password")
     if st.button("Submit"):
-        if api_code == API_CODE:
+        st.toast("Authenticating...", icon="⚠️")
+        db_api_key=auth_collection.find_one({"api_key":api_code})
+        if db_api_key:
             st.session_state.authenticated = True
+            st.session_state.api_code = api_code
             st.success("Authentication successful.")
             st.rerun()  # Re-run the script to remove the auth form
         else:
             st.error("Authentication failed. Please try again.")
 
-# MongoDB connection
-client = MongoClient(os.environ.get("MONGODB_ATLAS_URI"))
-db = client['ocr_db']
-collection = db['ocr_documents']
+
 
 transcribed_object = "other"
 
@@ -84,34 +91,83 @@ def save_image_to_mongodb(image, description):
 
     # Parse the cleaned JSON string into a Python dictionary
     document = json.loads(cleaned_document)
+
+    response = openai.embeddings.create(
+    input=json.dumps({
+        'name' : document['name'],
+        'type' : document['type']
+    }),
+    model="text-embedding-3-small"
+)
+
+    gen_embeddings=response.data[0].embedding
+
     collection.insert_one({
         'image': encoded_image,
+        'api_key': st.session_state.api_code,
+        'embedding' : gen_embeddings,
         'ocr': document
     })
 
-# Function to search and display images from MongoDB using Haystack
-def search_and_display_images(query):
-    prompt_builder = DynamicChatPromptBuilder()
-    llm = OpenAIChatGenerator(api_key=Secret.from_token("your_openai_api_key"), model="gpt-3.5-turbo")
+def search_aggregation(search_query):
+    docs = list(collection.aggregate([
+        {
+            '$search': {
+                'index': 'search', 
+                'compound': {
+                    'should': [
+                        {
+                            'text': {
+                                'query': search_query, 
+                                'path': {
+                                    'wildcard': '*'
+                                }, 
+                                'fuzzy': {
+                                    'maxEdits' : 2
+                                }
+                            }
+                        }
+                    ], 
+                    'filter': [
+                        {
+                            'queryString': {
+                                'defaultPath': 'api_key', 
+                                'query': st.session_state.api_code
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    ]))
+    return docs   
 
-    pipe = Pipeline()
-    pipe.add_component("prompt_builder", prompt_builder)
-    pipe.add_component("llm", llm)
-    pipe.connect("prompt_builder.prompt", "llm.messages")
+def vector_search_aggregation(search_query):
+    query_resp = openai.embeddings.create(
+        input=search_query,
+        model="text-embedding-3-small"
+    )
+    query_vec = query_resp.data[0].embedding
+    docs = list(collection.aggregate([
+        {
+            '$vectorSearch': {
+                'index': 'vector_index', 
+                'queryVector': query_vec, 
+                'path': 'embedding', 
+                'numCandidates' : 20,
+                'limit' : 1,
+                'filter': {
+                    'api_key': st.session_state.api_code
+                }
+            }}
+    ]))
+    return docs
 
-    messages = [ChatMessage.from_system("Always respond in German even if some input data is in other languages."),
-                ChatMessage.from_user(f"Search for recipes containing: {query}")]
-
-    results = collection.find({"description": {"$regex": query, "$options": "i"}})
-    for result in results:
-        st.write(result['description'])
-        image_data = base64.b64decode(result['image'])
-        image = Image.open(io.BytesIO(image_data))
-        st.image(image, use_column_width=True)
 # Main app logic
 if not st.session_state.authenticated:
     auth_form()
 else:
+    st.toast("Authenticated", icon="👍")
     st.title("👀 AllCR App")
 
     # Image capture
@@ -120,7 +176,7 @@ else:
     st.write("Capture real life objects like Recipes, Documents, Animals, Vehicles, etc., and turn them into searchable documents.")
     options = st.multiselect(
         "What do you want to capture?",
-        ["Recipe", "Document", "Animal", "Vehicle", "Product", "Other"], ["Other"])
+        ["Recipe", "Document", "Animal", "Vehicle", "Product", "Sports", "Other"], ["Other"])
 
     transcribed_object = options[0] if options else "other"
     image = st.camera_input("Take a picture")
@@ -148,27 +204,18 @@ else:
     # Search functionality
     st.header("Recorded Documents")
     
+    
 
     ## Adding search bar
     search_query = st.text_input("Search for documents")
-
+    toggle_vector_search = st.toggle("Vector Search", False)
     if search_query:
-        docs = list(collection.aggregate([
-        {
-            "$search": {
-            "index": "search",
-            "text": {
-                "query": search_query,
-                "path": {
-                "wildcard": "*"
-                },
-                "fuzzy" : { "maxEdits" : 2 }
-            }
-            }
-        }
-        ]))
+        if not toggle_vector_search:
+            docs = search_aggregation(search_query)
+        else:
+            docs = vector_search_aggregation(search_query)
     else:
-        docs = list(collection.find())
+        docs = list(collection.find({"api_key": st.session_state.api_code}))
     for doc in docs:
         expander = st.expander(f"{doc['ocr']['type']} '{doc['ocr']['name']}'")
         expander.write(doc['ocr'])  # Ensure 'recipe' matches your MongoDB field name
