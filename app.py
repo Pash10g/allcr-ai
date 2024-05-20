@@ -1,15 +1,13 @@
 import streamlit as st
 from pymongo import MongoClient
+from bson.objectid import ObjectId
 from PIL import Image
 import io
 import os
 import base64
 import openai
 import json
-from haystack.dataclasses import ChatMessage
-from haystack.components.generators.chat import OpenAIChatGenerator
-from haystack import Pipeline
-from haystack.utils import Secret
+
 
 # OpenAI API key
 openai.api_key = os.environ.get("OPENAI_API_KEY")
@@ -109,6 +107,31 @@ def save_image_to_mongodb(image, description):
         'ocr': document
     })
 
+def get_ai_task(ocr,prompt):
+    ocr_text = json.dumps(ocr)
+    response = openai.chat.completions.create(
+        model="gpt-4o",
+        messages=[{
+        "role": "system",
+        "content": "You are  a task assistant looking to create a task for the AI to perform on the JSON object. Please return plain output which is only copy paste with no explanation."
+        },
+        {
+        "role": "user",
+        "content": f"Please perform the following task {prompt}  on the following JSON object {ocr_text}. Make sure that the output is stright forward to copy paste."
+        }
+        ]
+        )
+    
+    return response.choices[0].message.content
+
+def save_ai_task(task_id, task_result):
+    collection.update_one(
+        {"_id": ObjectId(task_id)},
+        {"$push" : {"ai_tasks" : task_result}}
+    )
+
+    return "Task saved successfully."
+
 def search_aggregation(search_query):
     docs = list(collection.aggregate([
         {
@@ -155,7 +178,7 @@ def vector_search_aggregation(search_query):
                 'queryVector': query_vec, 
                 'path': 'embedding', 
                 'numCandidates' : 20,
-                'limit' : 1,
+                'limit' : 5,
                 'filter': {
                     'api_key': st.session_state.api_code
                 }
@@ -167,7 +190,6 @@ def vector_search_aggregation(search_query):
 if not st.session_state.authenticated:
     auth_form()
 else:
-    st.toast("Authenticated", icon="👍")
     st.title("👀 AllCR App")
 
     # Image capture
@@ -185,13 +207,26 @@ else:
     def show_dialog():
         st.write(extracted_text)
         if st.button("Confirm Save to MongoDB"):
-            
-
         
             save_image_to_mongodb(img, extracted_text)
             st.rerun()
             
-            
+    @st.experimental_dialog("AI Task on Document",width="large")
+    def show_prompt_dialog(work_doc):
+        st.header("Please describe the AI processing to be done on the document.")
+        st.markdown(f"""### Document: {work_doc['ocr']['name']} 
+                                 
+                                 Example: Translate this document to French.
+                                 """)
+        prompt = st.text_area("AI Prompt")
+        if st.button("Confirm task"):
+            result = get_ai_task(work_doc['ocr'],prompt)
+            st.code(result)
+            if st.button("Save Task to Document"):
+                res = save_ai_task(work_doc['_id'], result)
+                st.success(res)
+                
+                 
 
 
     if st.button("Analyze image for MongoDB"):
@@ -220,8 +255,15 @@ else:
         expander = st.expander(f"{doc['ocr']['type']} '{doc['ocr']['name']}'")
         expander.write(doc['ocr'])  # Ensure 'recipe' matches your MongoDB field name
         ## collapseble image
+
+        image_col, prompt_col = expander.columns(2)
         
-        if expander.button("Show Image", key=doc['_id']):
-            image_data = base64.b64decode(doc['image'])
-            image = Image.open(io.BytesIO(image_data))
-            expander.image(image, use_column_width=True)
+        with image_col:
+            if expander.button("Show Image", key=f"{doc['_id']}-image"):
+                image_data = base64.b64decode(doc['image'])
+                image = Image.open(io.BytesIO(image_data))
+                expander.image(image, use_column_width=True)
+
+        with prompt_col:
+            if expander.button("Run AI Prompt", key=f"{doc['_id']}-prompt"):
+               show_prompt_dialog(doc)
