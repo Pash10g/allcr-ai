@@ -16,6 +16,51 @@ AllCR App is a Streamlit application that allows users to capture real-life obje
 - Streamlit
 - OpenAI Python Client Library
 - MongoDB Atlas cluster
+
+Once the cluster is deployed perform the following tasks:
+1. Create a database named 'ocr_db' with collection 'api_keys' :
+```
+use ocr_db
+db.api_keys.insertOne({'api_key' : "<YOUR_IMAGINARY_KEY>"});
+```
+2. Create a 2 search indexes:
+2.1 [Vector search](https://www.mongodb.com/docs/atlas/atlas-vector-search/tutorials/vector-search-quick-start/) index on 'ocr_db.ocr_documents':
+
+```
+{
+  "fields": [
+    {
+      "numDimensions": 1536,
+      "path": "embedding",
+      "similarity": "cosine",
+      "type": "vector"
+    },
+    {
+      "path": "api_key",
+      "type": "filter"
+    }
+  ]
+}
+```
+2.2 Atlas [text Search](https://www.mongodb.com/docs/atlas/atlas-search/tutorial/create-index/) index on 'ocr_documents':
+```
+{
+  "mappings": {
+    "dynamic": true,
+    "fields": {
+      "api_key": {
+        "type": "string"
+      },
+      "ocr": {
+        "dynamic": true,
+        "type": "document"
+      }
+    }
+  }
+}
+```
+
+
 - PIL (Python Imaging Library)
 - Haystack (for advanced search functionality)
 
@@ -42,7 +87,6 @@ AllCR App is a Streamlit application that allows users to capture real-life obje
 ```
    OPENAI_API_KEY=your_openai_api_key
    MONGODB_ATLAS_URI=your_mongodb_atlas_uri
-   API_CODE=your_api_code
 ```
 ## Usage
 
@@ -54,6 +98,8 @@ AllCR App is a Streamlit application that allows users to capture real-life obje
 ```
    Open your web browser and go to `http://localhost:8501`.
 ```
+Once prompted input the api_key saved in Atlas under the 'ocr_db.api_keys' collection.
+
 3. **Authenticate:**
 
    Enter the API code provided in your `.env` file to access the application.
