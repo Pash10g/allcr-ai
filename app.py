@@ -209,7 +209,15 @@ else:
         ["Recipe", "Document", "Animal", "Vehicle", "Product", "Sports", "Other"], ["Other"])
 
     transcribed_object = options[0] if options else "other"
-    image = st.camera_input("Take a picture")
+    tab_cam, tab_upl = st.tabs(["Camera", "Upload"])
+    with tab_cam:
+        image = st.camera_input("Take a picture")
+
+    with tab_upl:
+        uploaded_file = st.file_uploader("Choose a file")
+        if uploaded_file is not None:
+        # To read file as bytes:
+            image = uploaded_file.getvalue()
 
     @st.experimental_dialog("Processed Document",width="large")
     def show_dialog():
