@@ -186,10 +186,12 @@ def vector_search_aggregation(search_query):
     ]))
     return docs
 
+
 # Main app logic
 if not st.session_state.authenticated:
     auth_form()
 else:
+    st.toast("Authenticated", icon="👍")
     st.title("👀 AllCR App")
 
     # Image capture
