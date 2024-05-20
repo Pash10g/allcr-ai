@@ -217,7 +217,7 @@ else:
         uploaded_file = st.file_uploader("Choose a file")
         if uploaded_file is not None:
         # To read file as bytes:
-            image = uploaded_file.getvalue()
+            image = uploaded_file
 
     @st.experimental_dialog("Processed Document",width="large")
     def show_dialog():
