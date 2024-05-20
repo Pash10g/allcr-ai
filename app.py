@@ -26,7 +26,7 @@ if 'authenticated' not in st.session_state:
 
 def auth_form():
     
-    st.title("Authentication")
+
     st.write("Please enter the API code to access the application.")
     api_code = st.text_input("API Code", type="password")
     if st.button("Submit"):
@@ -77,6 +77,10 @@ def transform_image_to_text(image):
     extracted_text = response.choices[0].message.content
     return extracted_text
 
+def clean_document(document):
+    cleaned_document = document.strip().strip("```json").strip("```").strip()
+    return json.loads(cleaned_document)
+
 # Function to save image and text to MongoDB
 def save_image_to_mongodb(image, description):
     img_byte_arr = io.BytesIO()
@@ -85,10 +89,10 @@ def save_image_to_mongodb(image, description):
     encoded_image = base64.b64encode(img_byte_arr).decode('utf-8')
     
     # Remove the ```json and ``` parts
-    cleaned_document = description.strip().strip("```json").strip("```").strip()
+    
 
     # Parse the cleaned JSON string into a Python dictionary
-    document = json.loads(cleaned_document)
+    document = clean_document(description)
 
     response = openai.embeddings.create(
     input=json.dumps({
@@ -104,7 +108,8 @@ def save_image_to_mongodb(image, description):
         'image': encoded_image,
         'api_key': st.session_state.api_code,
         'embedding' : gen_embeddings,
-        'ocr': document
+        'ocr': document,
+        'ai_tasks': []
     })
 
 def get_ai_task(ocr,prompt):
@@ -124,10 +129,12 @@ def get_ai_task(ocr,prompt):
     
     return response.choices[0].message.content
 
-def save_ai_task(task_id, task_result):
+def save_ai_task(task_id, task_result, prompt):
+    print(task_id)
+    print(task_result)
     collection.update_one(
         {"_id": ObjectId(task_id)},
-        {"$push" : {"ai_tasks" : task_result}}
+        {"$push" : {"ai_tasks" : {'prompt' : prompt, 'result' : task_result}}}
     )
 
     return "Task saved successfully."
@@ -191,7 +198,6 @@ def vector_search_aggregation(search_query):
 if not st.session_state.authenticated:
     auth_form()
 else:
-    st.toast("Authenticated", icon="👍")
     st.title("👀 AllCR App")
 
     # Image capture
@@ -224,9 +230,16 @@ else:
         if st.button("Confirm task"):
             result = get_ai_task(work_doc['ocr'],prompt)
             st.code(result)
-            if st.button("Save Task to Document"):
-                res = save_ai_task(work_doc['_id'], result)
-                st.success(res)
+            res = save_ai_task(work_doc['_id'], result, prompt)
+            st.success(res)
+            # if st.button("Save Task to Document"):
+        ## if length of array bigger than 0
+        if len(work_doc['ai_tasks']) > 0:
+            st.markdown("### Previous Tasks")
+            for task in doc['ai_tasks']:
+                task_expander = st.expander(f"Task: {task['prompt']}...")
+                task_expander.markdown(task['result'])
+                
                 
                  
 
@@ -252,7 +265,7 @@ else:
         else:
             docs = vector_search_aggregation(search_query)
     else:
-        docs = list(collection.find({"api_key": st.session_state.api_code}))
+        docs = list(collection.find({"api_key": st.session_state.api_code}).sort({"_id": -1}))
     for doc in docs:
         expander = st.expander(f"{doc['ocr']['type']} '{doc['ocr']['name']}'")
         expander.write(doc['ocr'])  # Ensure 'recipe' matches your MongoDB field name
@@ -269,3 +282,5 @@ else:
         with prompt_col:
             if expander.button("Run AI Prompt", key=f"{doc['_id']}-prompt"):
                show_prompt_dialog(doc)
+
+   
