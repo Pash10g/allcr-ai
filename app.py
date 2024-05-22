@@ -140,7 +140,7 @@ def save_ai_task(task_id, task_result, prompt):
     return "Task saved successfully."
 
 def ai_chat(query):
-    relevant_docs = vector_search_aggregation(query)
+    relevant_docs = vector_search_aggregation(query, 1)
     context = str(relevant_docs)
     response = openai.chat.completions.create(
         model="gpt-4o",
@@ -185,7 +185,7 @@ def search_aggregation(search_query):
     ]))
     return docs   
 
-def vector_search_aggregation(search_query):
+def vector_search_aggregation(search_query, limit):
     query_resp = openai.embeddings.create(
         input=search_query,
         model="text-embedding-3-small"
@@ -198,7 +198,7 @@ def vector_search_aggregation(search_query):
                 'queryVector': query_vec, 
                 'path': 'embedding', 
                 'numCandidates' : 20,
-                'limit' : 5,
+                'limit' : limit,
                 'filter': {
                     'api_key': st.session_state.api_code
                 }
@@ -292,7 +292,7 @@ else:
         if not toggle_vector_search:
             docs = search_aggregation(search_query)
         else:
-            docs = vector_search_aggregation(search_query)
+            docs = vector_search_aggregation(search_query, 5)
     else:
         docs = list(collection.find({"api_key": st.session_state.api_code}).sort({"_id": -1}))
     for doc in docs:
