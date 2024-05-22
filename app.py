@@ -84,7 +84,7 @@ def clean_document(document):
 # Function to save image and text to MongoDB
 def save_image_to_mongodb(image, description):
     img_byte_arr = io.BytesIO()
-    image.save(img_byte_arr, format='JPEG')
+    image.save(img_byte_arr, format=image.format)
     img_byte_arr = img_byte_arr.getvalue()
     encoded_image = base64.b64encode(img_byte_arr).decode('utf-8')
     
