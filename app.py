@@ -298,9 +298,10 @@ else:
         if prompt := st.chat_input("Ask me something about the stored docs..."):
             # Append user message to chat history
             st.session_state.chat_history.append(("user", prompt))
+            messages.chat_message("user").write(message)
         
             # Simulate AI response and append to chat history
-            with st.spinner('Generating response...'):
+            with st.spinner('RAGing...'):
                 chat_response = ai_chat(prompt)
             st.session_state.chat_history.append(("assistant", chat_response))
     
