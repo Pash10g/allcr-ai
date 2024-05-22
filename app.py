@@ -145,7 +145,7 @@ def ai_chat(query):
     response = openai.chat.completions.create(
         model="gpt-4o",
         messages=[
-            {"role": "system", "content": "You are an assistant that uses document context to answer questions."},
+            {"role": "system", "content": "You are an assistant that uses document context to answer questions. Answer not too long and concise answers."},
             {"role": "user", "content": f"Using the following context, please answer the question: {query}\n\nContext:\n{context}"}
         ],
         stream=False
