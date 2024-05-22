@@ -282,6 +282,7 @@ else:
     # Search functionality
     st.header("Recorded Documents")
     with st.sidebar:
+        st.header("Chat with AI")
         messages = st.container(height=500)
         if prompt := st.chat_input("Ask me something about the stored docs..."):
             messages.chat_message("user").write(prompt)
