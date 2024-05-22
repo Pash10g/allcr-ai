@@ -139,6 +139,18 @@ def save_ai_task(task_id, task_result, prompt):
 
     return "Task saved successfully."
 
+def ai_chat(query):
+    relevant_docs = vector_search_aggregation(query)
+    context = "\n".join([doc["description"] for doc in relevant_docs])
+    response = openai.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": "You are an assistant that uses document context to answer questions."},
+            {"role": "user", "content": f"Using the following context, please answer the question: {query}\n\nContext:\n{context}"}
+        ]
+    )
+    return response.choices[0].message.content
+
 def search_aggregation(search_query):
     docs = list(collection.aggregate([
         {
@@ -199,6 +211,13 @@ if not st.session_state.authenticated:
     auth_form()
 else:
     st.title("👀 AllCR App")
+
+    with st.sidebar:
+    messages = st.container(height=300)
+    if prompt := st.chat_input("Say something"):
+        messages.chat_message("user").write(prompt)
+        chat_response=ai_chat(prompt)
+        messages.chat_message("assistant").write(f"{chat_response}")
 
     # Image capture
     st.header("Capture Objects with AI")
