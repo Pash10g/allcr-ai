@@ -147,7 +147,8 @@ def ai_chat(query):
         messages=[
             {"role": "system", "content": "You are an assistant that uses document context to answer questions."},
             {"role": "user", "content": f"Using the following context, please answer the question: {query}\n\nContext:\n{context}"}
-        ]
+        ],
+        stream=False
     )
     return response.choices[0].message.content
 
@@ -201,7 +202,8 @@ def vector_search_aggregation(search_query):
                 'filter': {
                     'api_key': st.session_state.api_code
                 }
-            }}
+            }},
+            { '$project' : {'embedding'  : 0} }
     ]))
     return docs
 
