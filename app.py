@@ -281,8 +281,10 @@ else:
         messages = st.container(height=500)
         if prompt := st.chat_input("Say something"):
             messages.chat_message("user").write(prompt)
+            assistant = messages.chat_message("assistant")
+            assistant.write(f"...")
             chat_response=ai_chat(prompt)
-            messages.chat_message("assistant").write(f"{chat_response}")
+            assistant.write(f"{chat_response}")
     
 
     ## Adding search bar
