@@ -292,7 +292,7 @@ else:
     #         assistant.write(f"{chat_response}")
     with st.sidebar:
         st.header("Chat with AI")
-        messages = st.container()
+        messages = st.container(height=500)
     
         # Input prompt
         if prompt := st.chat_input("Ask me something about the stored docs..."):
