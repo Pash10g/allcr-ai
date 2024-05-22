@@ -141,7 +141,7 @@ def save_ai_task(task_id, task_result, prompt):
 
 def ai_chat(query):
     relevant_docs = vector_search_aggregation(query)
-    context = json.dumps(relevant_docs)
+    context = str(relevant_docs)
     response = openai.chat.completions.create(
         model="gpt-4o",
         messages=[
