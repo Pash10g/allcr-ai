@@ -212,12 +212,7 @@ if not st.session_state.authenticated:
 else:
     st.title("👀 AllCR App")
 
-    with st.sidebar:
-    messages = st.container(height=300)
-    if prompt := st.chat_input("Say something"):
-        messages.chat_message("user").write(prompt)
-        chat_response=ai_chat(prompt)
-        messages.chat_message("assistant").write(f"{chat_response}")
+    
 
     # Image capture
     st.header("Capture Objects with AI")
@@ -280,7 +275,12 @@ else:
 
     # Search functionality
     st.header("Recorded Documents")
-    
+    with st.popover('Chatbot'):
+    messages = st.container(height=500)
+    if prompt := st.chat_input("Say something"):
+        messages.chat_message("user").write(prompt)
+        chat_response=ai_chat(prompt)
+        messages.chat_message("assistant").write(f"{chat_response}")
     
 
     ## Adding search bar
