@@ -45,9 +45,9 @@ def auth_form():
 transcribed_object = "other"
 
 # Function to transform image to text using OpenAI
-def transform_image_to_text(image):
+def transform_image_to_text(image, format):
     img_byte_arr = io.BytesIO()
-    image.save(img_byte_arr, format='JPEG')
+    image.save(img_byte_arr, format=format)
     img_byte_arr = img_byte_arr.getvalue()
     encoded_image = base64.b64encode(img_byte_arr).decode('utf-8')
 
@@ -255,7 +255,7 @@ else:
     if st.button("Analyze image for MongoDB"):
         if image is not None:
             img = Image.open(io.BytesIO(image.getvalue()))
-            extracted_text = transform_image_to_text(img)
+            extracted_text = transform_image_to_text(img, img.format)
             show_dialog()
             
 
