@@ -141,12 +141,12 @@ def save_ai_task(task_id, task_result, prompt):
 
 def ai_chat(query):
     relevant_docs = vector_search_aggregation(query)
-    
+    context = json.dumps(relevant_docs)
     response = openai.chat.completions.create(
         model="gpt-4o",
         messages=[
             {"role": "system", "content": "You are an assistant that uses document context to answer questions."},
-            {"role": "user", "content": f"Using the following context, please answer the question: {query}\n\nContext:\n{str(context)}"}
+            {"role": "user", "content": f"Using the following context, please answer the question: {query}\n\nContext:\n{context}"}
         ]
     )
     return response.choices[0].message.content
