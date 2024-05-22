@@ -283,7 +283,8 @@ else:
             messages.chat_message("user").write(prompt)
             assistant = messages.chat_message("assistant")
             assistant.write(f"...")
-            chat_response=ai_chat(prompt)
+            with st.spinner('Raging...'):
+                chat_response=ai_chat(prompt)
             assistant.write(f"{chat_response}")
     
 
