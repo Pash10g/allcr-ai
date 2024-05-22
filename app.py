@@ -141,12 +141,12 @@ def save_ai_task(task_id, task_result, prompt):
 
 def ai_chat(query):
     relevant_docs = vector_search_aggregation(query)
-    context = "\n".join([doc["description"] for doc in relevant_docs])
+    
     response = openai.chat.completions.create(
         model="gpt-4o",
         messages=[
             {"role": "system", "content": "You are an assistant that uses document context to answer questions."},
-            {"role": "user", "content": f"Using the following context, please answer the question: {query}\n\nContext:\n{context}"}
+            {"role": "user", "content": f"Using the following context, please answer the question: {query}\n\nContext:\n{str(context)}"}
         ]
     )
     return response.choices[0].message.content
@@ -275,7 +275,7 @@ else:
 
     # Search functionality
     st.header("Recorded Documents")
-    with st.popover('Chatbot'):
+    with st.sidebar:
         messages = st.container(height=500)
         if prompt := st.chat_input("Say something"):
             messages.chat_message("user").write(prompt)
