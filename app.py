@@ -24,6 +24,10 @@ auth_collection=db['api_keys']
 if 'authenticated' not in st.session_state:
     st.session_state.authenticated = False
 
+if 'chat_history' not in st.session_state:
+    st.session_state.chat_history = []
+
+
 def auth_form():
     
 
@@ -277,15 +281,35 @@ else:
 
     # Search functionality
     st.header("Recorded Documents")
+    # with st.sidebar:
+    #     messages = st.container(height=500)
+    #     if prompt := st.chat_input("Ask me something about the stored docs..."):
+    #         messages.chat_message("user").write(prompt)
+    #         assistant = messages.chat_message("assistant")
+    #         assistant.write(f"...")
+    #         with st.spinner('Raging...'):
+    #             chat_response=ai_chat(prompt)
+    #         assistant.write(f"{chat_response}")
     with st.sidebar:
-        messages = st.container(height=500)
+        st.header("Chat with AI")
+        messages = st.container()
+    
+        # Input prompt
         if prompt := st.chat_input("Ask me something about the stored docs..."):
-            messages.chat_message("user").write(prompt)
-            assistant = messages.chat_message("assistant")
-            assistant.write(f"...")
-            with st.spinner('Raging...'):
-                chat_response=ai_chat(prompt)
-            assistant.write(f"{chat_response}")
+            # Append user message to chat history
+            st.session_state.chat_history.append(("user", prompt))
+        
+            # Simulate AI response and append to chat history
+            with st.spinner('Generating response...'):
+                chat_response = ai_chat(prompt)
+            st.session_state.chat_history.append(("assistant", chat_response))
+    
+        # Display chat history
+        for role, message in st.session_state.chat_history:
+            if role == "user":
+                messages.chat_message("user").write(message)
+            else:
+                messages.chat_message("assistant").write(message)
     
 
     ## Adding search bar
