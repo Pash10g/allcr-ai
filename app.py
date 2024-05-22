@@ -168,9 +168,6 @@ def search_aggregation(search_query):
                                 'query': search_query, 
                                 'path': {
                                     'wildcard': '*'
-                                }, 
-                                'fuzzy': {
-                                    'maxEdits' : 2
                                 }
                             }
                         }
