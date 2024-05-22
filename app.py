@@ -279,7 +279,7 @@ else:
     st.header("Recorded Documents")
     with st.sidebar:
         messages = st.container(height=500)
-        if prompt := st.chat_input("Say something"):
+        if prompt := st.chat_input("Ask me something about the stored docs..."):
             messages.chat_message("user").write(prompt)
             assistant = messages.chat_message("assistant")
             assistant.write(f"...")
