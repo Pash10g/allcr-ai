@@ -143,21 +143,25 @@ def save_ai_task(task_id, task_result, prompt):
 
     return "Task saved successfully."
 
-def ai_chat(query):
+def ai_chat(query,message):
     relevant_docs = vector_search_aggregation(query, 3)
     context = ''
     for doc in relevant_docs:
         context+=json.dumps(doc['ocr'])
     
-    response = openai.chat.completions.create(
+    stream = openai.chat.completions.create(
         model="gpt-4o",
         messages=[
             {"role": "system", "content": "You are an assistant that uses document context to answer questions. Answer not too long and concise answers."},
             {"role": "user", "content": f"Using the following context, please answer the question: {query}\n\nContext:\n{context}"}
         ],
-        stream=False
+        stream=True
     )
-    return response.choices[0].message.content
+    response = message.write_stream(stream)
+
+    st.session_state.messages.append({"role": "assistant", "content": response})
+    
+    
 
 def search_aggregation(search_query):
     docs = list(collection.aggregate([
@@ -280,38 +284,25 @@ else:
             
 
     # Search functionality
-    st.header("Recorded Documents")
-    with st.sidebar:
+     with st.sidebar:
         st.header("Chat with AI")
+       
         messages = st.container(height=500)
-        if prompt := st.chat_input("Ask me something about the stored docs..."):
-            messages.chat_message("user").write(prompt)
-            assistant = messages.chat_message("assistant")
-            assistant.write(f"...")
-            with st.spinner('Raging...'):
-                chat_response=ai_chat(prompt)
-            assistant.write(f"{chat_response}")
-    # with st.sidebar:
-    #     st.header("Chat with AI")
-    #     messages = st.container(height=500)
-    
-    #     # Input prompt
-    #     if prompt := st.chat_input("Ask me something about the stored docs..."):
-    #         # Append user message to chat history
-    #         st.session_state.chat_history.append(("user", prompt))
-    #         messages.chat_message("user").write(message)
-        
-    #         # Simulate AI response and append to chat history
-    #         with st.spinner('RAGing...'):
-    #             chat_response = ai_chat(prompt)
-    #         st.session_state.chat_history.append(("assistant", chat_response))
-    
-    #     # Display chat history
-    #     for role, message in st.session_state.chat_history:
-    #         if role == "user":
-    #             messages.chat_message("user").write(message)
-    #         else:
-    #             messages.chat_message("assistant").write(message)
+        for message in st.session_state.messages:
+            with messages.chat_message(message["role"]):
+                messages.markdown(message["content"])
+
+        # Accept user input
+        if prompt := st.chat_input("Ask me something about the docs..."):
+            # Add user message to chat history
+            st.session_state.messages.append({"role": "user", "content": prompt})
+            # Display user message in chat message container
+            with messages.chat_message("user"):
+                messages.markdown(prompt)
+            with st.spinner('RAGing...'):
+                
+                with messages.chat_message("assistant"):
+                    response = ai_chat(prompt, st)
     
 
     ## Adding search bar
