@@ -284,7 +284,7 @@ else:
             
 
     # Search functionality
-     with st.sidebar:
+    with st.sidebar:
         st.header("Chat with AI")
        
         messages = st.container(height=500)
