@@ -144,7 +144,7 @@ def save_ai_task(task_id, task_result, prompt):
     return "Task saved successfully."
 
 def ai_chat(query):
-    relevant_docs = vector_search_aggregation(query, 1)
+    relevant_docs = vector_search_aggregation(query, 3)
     context = ''
     for doc in relevant_docs:
         context+=json.dumps(doc['ocr'])
