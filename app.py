@@ -66,7 +66,7 @@ def transform_image_to_text(image, format):
       "content": [
         {
           "type": "text",
-          "text": f"Please trunscribe this {transcribed_object} into a json only output for MongoDB store. Always have a 'name' and 'type' top field (type is a subdocument with user and 'ai_classified') as well as other fields as you see fit."
+          "text": f"Please trunscribe this {transcribed_object} into a json only output for MongoDB store as a single document. Always have a 'name' and 'type' top field (type is a subdocument with user and 'ai_classified') as well as other fields as you see fit."
         },
         {
           "type": "image_url",
