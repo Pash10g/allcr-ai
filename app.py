@@ -149,8 +149,8 @@ def ai_chat(query,message):
     for doc in relevant_docs:
         context+=json.dumps(doc['ocr'])
     messages=[{"role": "system", "content": "You are an assistant that uses document context to answer questions. Answer not too long and concise answers."}]
-    for message in st.session_state.messages:
-        messages.append(message)
+    for chat_message in st.session_state.messages:
+        messages.append(chat_message)
 
     messages.append({"role": "user", "content": f"Using the following context, please answer the question: {query}\n\nContext:\n{context}"})
         
