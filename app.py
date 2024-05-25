@@ -148,13 +148,15 @@ def ai_chat(query,message):
     context = ''
     for doc in relevant_docs:
         context+=json.dumps(doc['ocr'])
-    
+    messages=[{"role": "system", "content": "You are an assistant that uses document context to answer questions. Answer not too long and concise answers."}]
+    for message in st.session_state.messages:
+        messages.append(message)
+
+    messages.append({"role": "user", "content": f"Using the following context, please answer the question: {query}\n\nContext:\n{context}"})
+        
     stream = openai.chat.completions.create(
         model="gpt-4o",
-        messages=[
-            {"role": "system", "content": "You are an assistant that uses document context to answer questions. Answer not too long and concise answers."},
-            {"role": "user", "content": f"Using the following context, please answer the question: {query}\n\nContext:\n{context}"}
-        ],
+        messages=messages,
         stream=True
     )
     response = message.write_stream(stream)
