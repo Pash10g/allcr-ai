@@ -230,7 +230,7 @@ else:
     st.write("Capture real life objects like Recipes, Documents, Animals, Vehicles, etc., and turn them into searchable documents.")
     options = st.multiselect(
         "What do you want to capture?",
-        ["Recipe", "Document", "Animal", "Vehicle", "Product", "Sports", "Other"], ["Other"])
+        ["Recipe", "Post", "Screenshot","Document", "Animal", "Vehicle", "Product", "Sports", "Other"], ["Other"])
 
     transcribed_object = options[0] if options else "other"
     tab_cam, tab_upl = st.tabs(["Camera", "Upload"])
