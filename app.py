@@ -288,6 +288,9 @@ else:
     # Search functionality
     with st.sidebar:
         st.header("Chat with AI")
+
+        if st.button("New Chat"):
+            st.session_state.messages=[]
        
         messages = st.container(height=500)
         for message in st.session_state.messages:
