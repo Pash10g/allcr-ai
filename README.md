@@ -129,6 +129,7 @@ Once prompted input the api_key saved in Atlas under the 'ocr_db.api_keys' colle
 - **`save_image_to_mongodb(image, description)`**: Saves the captured image and extracted text to MongoDB.
 - **`searc_aggregation(query), vector_search_aggregation(query, limit)`**: Searches and displays images from MongoDB based on the query/term.
 - **`get_ai_task(doc)`**: Performs an AI generation subtask with the inputed document as context.
+  **`chat_ai()`** : Use GPT to form a streaming chat with the vector query context on the application "sidebar".
 
 ## Contributing
 
