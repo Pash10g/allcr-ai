@@ -266,6 +266,8 @@ else:
             st.code(result)
             res = save_ai_task(work_doc['_id'], result, prompt)
             st.success(res)
+            work_doc['ai_task'].expand({'prompt' : prompt,
+                                        'result' : result})
             # if st.button("Save Task to Document"):
         ## if length of array bigger than 0
         if 'ai_tasks' in work_doc and len(work_doc['ai_tasks']) > 0:
