@@ -127,7 +127,8 @@ Once prompted input the api_key saved in Atlas under the 'ocr_db.api_keys' colle
 - **`auth_form()`**: Handles user authentication using an API code.
 - **`transform_image_to_text(image)`**: Transforms a captured image to text using OpenAI's GPT-4.
 - **`save_image_to_mongodb(image, description)`**: Saves the captured image and extracted text to MongoDB.
-- **`search_and_display_images(query)`**: Searches and displays images from MongoDB based on the query.
+- **`searc_aggregation(query), vector_search_aggregation(query, limit)`**: Searches and displays images from MongoDB based on the query/term.
+- **`get_ai_task(doc)`**: Performs an AI generation subtask with the inputed document as context.
 
 ## Contributing
 
