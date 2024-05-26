@@ -247,7 +247,7 @@ else:
 
     @st.experimental_dialog("Processed Document",width="large")
     def show_dialog():
-        with st.spinner("Analysing document with GPT...")
+        with st.spinner("Analysing document with GPT..."):
             img = Image.open(io.BytesIO(image.getvalue()))
             extracted_text = transform_image_to_text(img, img.format)
         st.write(extracted_text)
