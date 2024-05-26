@@ -9,6 +9,7 @@ AllCR App is a Streamlit application that allows users to capture real-life obje
 - **OCR to JSON**: Convert captured images to JSON format using OpenAI's GPT-4.
 - **MongoDB Integration**: Store and retrieve the extracted information from MongoDB.
 - **Search and Display**: Search and display stored documents along with their images.
+- **Chat with AI**: Open the sidebar to chat with GPT on the context captured by the app.
 
 ## Requirements
 
