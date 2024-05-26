@@ -247,9 +247,6 @@ else:
 
     @st.experimental_dialog("Processed Document",width="large")
     def show_dialog():
-        with st.spinner("Analysing document with GPT..."):
-            img = Image.open(io.BytesIO(image.getvalue()))
-            extracted_text = transform_image_to_text(img, img.format)
         st.write(extracted_text)
         if st.button("Confirm Save to MongoDB"):
         
@@ -283,7 +280,9 @@ else:
 
     if st.button("Analyze image for MongoDB"):
         if image is not None:
-            
+            with st.spinner("Analysing document with GPT..."):
+                img = Image.open(io.BytesIO(image.getvalue()))
+                extracted_text = transform_image_to_text(img, img.format)
             show_dialog()
             
 
