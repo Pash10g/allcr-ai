@@ -268,11 +268,13 @@ else:
             st.success(res)
             # if st.button("Save Task to Document"):
         ## if length of array bigger than 0
-        if len(work_doc['ai_tasks']) > 0:
+        if 'ai_tasks' in work_doc and len(work_doc['ai_tasks']) > 0:
             st.markdown("### Previous Tasks")
-            for task in doc['ai_tasks']:
-                task_expander = st.expander(f"Task: {task['prompt']}...")
+            for task in work_doc['ai_tasks']:
+                task_expander = st.expander(f"Task: {task['prompt']}")
                 task_expander.markdown(task['result'])
+        else:
+            st.write("No previous tasks found.")
                 
                 
                  
