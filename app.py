@@ -117,6 +117,7 @@ def save_image_to_mongodb(image, description):
     })
 
 def get_ai_task(ocr,prompt):
+    ## Use existing document as context and perform another GPT task
     ocr_text = json.dumps(ocr)
     response = openai.chat.completions.create(
         model="gpt-4o",
@@ -134,8 +135,7 @@ def get_ai_task(ocr,prompt):
     return response.choices[0].message.content
 
 def save_ai_task(task_id, task_result, prompt):
-    print(task_id)
-    print(task_result)
+
     collection.update_one(
         {"_id": ObjectId(task_id)},
         {"$push" : {"ai_tasks" : {'prompt' : prompt, 'result' : task_result}}}
