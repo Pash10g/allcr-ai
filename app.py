@@ -66,7 +66,7 @@ def transform_image_to_text(image, format):
       "content": [
         {
           "type": "text",
-          "text": f"Please trunscribe this {transcribed_object} into a json only output for MongoDB store, calture all data as a single document. Always have a 'name' and 'type' top field (type is a subdocument with user and 'ai_classified') as well as other fields as you see fit."
+          "text": f"Please trunscribe this {transcribed_object} into a json only output for MongoDB store, calture all data as a single document. Always have a 'name', 'summary'  and 'type' top field (type is a subdocument with user and 'ai_classified') as well as other fields as you see fit."
         },
         {
           "type": "image_url",
@@ -101,7 +101,7 @@ def save_image_to_mongodb(image, description):
     response = openai.embeddings.create(
     input=json.dumps({
         'name' : document['name'],
-        'type' : document['type']
+        'summary' : document['summary']
     }),
     model="text-embedding-3-small"
 )
@@ -247,6 +247,9 @@ else:
 
     @st.experimental_dialog("Processed Document",width="large")
     def show_dialog():
+        with st.spinner("Analysing document with GPT...")
+            img = Image.open(io.BytesIO(image.getvalue()))
+            extracted_text = transform_image_to_text(img, img.format)
         st.write(extracted_text)
         if st.button("Confirm Save to MongoDB"):
         
@@ -280,8 +283,7 @@ else:
 
     if st.button("Analyze image for MongoDB"):
         if image is not None:
-            img = Image.open(io.BytesIO(image.getvalue()))
-            extracted_text = transform_image_to_text(img, img.format)
+            
             show_dialog()
             
 
