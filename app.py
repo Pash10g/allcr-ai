@@ -273,12 +273,12 @@ else:
         if 'ai_tasks' in work_doc and len(work_doc['ai_tasks']) > 0:
             st.markdown("### Previous Tasks")
             for task in work_doc['ai_tasks']:
-                task_expander = st.expander(f"Task: {task['prompt']}")
-                text, markdown = task_expander.tabs(["text", "markdown"])
-                with text:
-                    task_expander.markdown(task['result'])
-                with markdown:
-                    task_expander.code(task['result'])
+                with st.expander(f"Task: {task['prompt']}"):
+                    text, markdown = st.tabs(["text", "markdown"])
+                    with text:
+                        st.markdown(task['result'])
+                    with markdown:
+                        st.code(task['result'])
         else:
             st.write("No previous tasks found.")
                 
