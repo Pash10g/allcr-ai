@@ -274,7 +274,7 @@ else:
             st.markdown("### Previous Tasks")
             for task in work_doc['ai_tasks']:
                 task_expander = st.expander(f"Task: {task['prompt']}")
-                text, markdown =.task_expande.tabs(["text", "markdown"])
+                text, markdown = task_expander.tabs(["text", "markdown"])
                 with text:
                     task_expander.markdown(task['result'])
                 with markdown:
