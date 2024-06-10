@@ -274,7 +274,11 @@ else:
             st.markdown("### Previous Tasks")
             for task in work_doc['ai_tasks']:
                 task_expander = st.expander(f"Task: {task['prompt']}")
-                task_expander.markdown(task['result'])
+                text, markdown =.task_expande.tabs(["text", "markdown"])
+                with text:
+                    task_expander.markdown(task['result'])
+                with markdown:
+                    task_expander.code(task['result'])
         else:
             st.write("No previous tasks found.")
                 
