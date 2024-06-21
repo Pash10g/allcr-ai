@@ -3,3 +3,4 @@ openai
 haystack-ai
 audio_recorder_streamlit
 streamlit==1.35.0
+filetype
