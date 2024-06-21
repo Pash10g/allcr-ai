@@ -271,14 +271,14 @@ def show_previous_tasks(work_doc,st):
 if not st.session_state.authenticated:
     auth_form()
 else:
-    st.title("👀 AllCR App")
+    st.title("👂👀👂 AllCR App")
 
     
 
     # Image capture
     st.header("Capture Objects with AI")
     st.divider()
-    st.write("Capture real life objects like Recipes, Documents, Animals, Vehicles, etc., and turn them into searchable documents.")
+    st.write("Capture or listen to real life objects like Recipes, Documents, Animals, Vehicles, etc., and turn them into searchable documents.")
     options = st.multiselect(
         "What do you want to capture?",
         ["Recipe", "Diagram", "Post", "Screenshot","Document", "Animal", "Vehicle", "Product", "Sports", "Other"], ["Other"])
@@ -298,7 +298,7 @@ else:
             image = uploaded_file
 
     with tab_rec:
-        st.header("Record and Transcribe Audio")
+        st.write("Record and Transcribe Audio")
         is_audio=True
         audio_bytes = audio_recorder()
         if audio_bytes:
@@ -314,8 +314,8 @@ else:
                     with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as fp:
                         fp.write(audio_bytes)
                         audio_bytes = fp.name
-                    transcribe_audio_and_store(audio_bytes)
-                    st.success("Audio transcribed and saved to MongoDB")
+                    with st.spinner("Transcribing audio..."):
+                        transcribe_audio_and_store(audio_bytes)
 
     @st.experimental_dialog("Processed Document",width="large")
     def show_dialog():
