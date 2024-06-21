@@ -281,7 +281,7 @@ else:
             audio_file = st.audio(audio_bytes, format="audio/wav")
             if st.button("Transcribe"):
                 if audio_file:
-                    transcribe_audio_and_store(audio_file)
+                    transcribe_audio_and_store(audio_bytes)
                     st.success("Audio transcribed and saved to MongoDB")
 
     @st.experimental_dialog("Processed Document",width="large")
