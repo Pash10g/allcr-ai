@@ -2,4 +2,4 @@ pymongo
 openai
 haystack-ai
 audio_recorder_streamlit
-streamlit
+streamlit=1.35.0
