@@ -1,3 +1,4 @@
 pymongo
 openai
 haystack-ai
+audio_recorder_streamlit
