@@ -162,7 +162,33 @@ def ai_chat(query,message):
     response = message.write_stream(stream)
 
     st.session_state.messages.append({"role": "assistant", "content": response})
-    
+def transcribe_audio_and_store(audio_file):
+    response = openai.Audio.transcriptions.create(
+        model="whisper-1",
+        file=audio_file
+    )
+    transcript = response['text']
+    description = f"Transcription: {transcript}"
+    document = {
+        'name' : 'Audio Transcribe',
+        'summary': transcript,
+        'description': description,
+        'type': 'audio_transcription'
+    }    
+
+    response = openai.embeddings.create(
+    input=json.dumps({
+        'name' : document['name'],
+        'summary' : document['summary']
+    }),
+    model="text-embedding-3-small"
+)
+
+    gen_embeddings=response.data[0].embedding
+
+    document['embedding'] = gen_embeddings
+
+    collection.insert_one(document)
     
 
 def search_aggregation(search_query):
@@ -235,7 +261,7 @@ else:
         ["Recipe", "Diagram", "Post", "Screenshot","Document", "Animal", "Vehicle", "Product", "Sports", "Other"], ["Other"])
 
     transcribed_object = options[0] if options else "other"
-    tab_cam, tab_upl = st.tabs(["Camera", "Upload"])
+    tab_cam, tab_upl, tab_rec = st.tabs(["Camera", "Upload", "Record"])
     with tab_cam:
         image = st.camera_input("Take a picture")
 
@@ -244,6 +270,14 @@ else:
         if uploaded_file is not None:
         # To read file as bytes:
             image = uploaded_file
+
+    with tab_rec:
+        st.header("Record and Transcribe Audio")
+        audio_file = st.file_uploader("Upload an audio file", type=["mp3", "wav"])
+        if st.button("Transcribe"):
+            if audio_file:
+                transcribe_audio_and_store(audio_file)
+                st.success("Audio transcribed and saved to MongoDB")
 
     @st.experimental_dialog("Processed Document",width="large")
     def show_dialog():
