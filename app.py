@@ -7,7 +7,7 @@ import os
 import base64
 import openai
 import json
-
+from audio_recorder_streamlit import audio_recorder
 
 # OpenAI API key
 openai.api_key = os.environ.get("OPENAI_API_KEY")
@@ -273,11 +273,13 @@ else:
 
     with tab_rec:
         st.header("Record and Transcribe Audio")
-        audio_file = st.file_uploader("Upload an audio file", type=["mp3", "wav"])
-        if st.button("Transcribe"):
-            if audio_file:
-                transcribe_audio_and_store(audio_file)
-                st.success("Audio transcribed and saved to MongoDB")
+        audio_bytes = audio_recorder()
+        if audio_bytes:
+            audio_file = st.audio(audio_bytes, format="audio/wav")
+            if st.button("Transcribe"):
+                if audio_file:
+                    transcribe_audio_and_store(audio_file)
+                    st.success("Audio transcribed and saved to MongoDB")
 
     @st.experimental_dialog("Processed Document",width="large")
     def show_dialog():
