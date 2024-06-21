@@ -162,8 +162,9 @@ def ai_chat(query,message):
     response = message.write_stream(stream)
 
     st.session_state.messages.append({"role": "assistant", "content": response})
+    
 def transcribe_audio_and_store(audio_file):
-    response = openai.Audio.transcriptions.create(
+    response = openai.audio.transcriptions.create(
         model="whisper-1",
         file=audio_file
     )
@@ -262,6 +263,7 @@ else:
 
     transcribed_object = options[0] if options else "other"
     tab_cam, tab_upl, tab_rec = st.tabs(["Camera", "Upload", "Record"])
+    is_audio=False
     with tab_cam:
         image = st.camera_input("Take a picture")
 
@@ -273,6 +275,7 @@ else:
 
     with tab_rec:
         st.header("Record and Transcribe Audio")
+        is_audio=True
         audio_bytes = audio_recorder()
         if audio_bytes:
             audio_file = st.audio(audio_bytes, format="audio/wav")
@@ -321,13 +324,13 @@ else:
                 
                  
 
-
-    if st.button("Analyze image for MongoDB"):
-        if image is not None:
-            with st.spinner("Analysing document with GPT..."):
-                img = Image.open(io.BytesIO(image.getvalue()))
-                extracted_text = transform_image_to_text(img, img.format)
-            show_dialog()
+    if not is_audio:
+        if st.button("Analyze image for MongoDB"):
+            if image is not None:
+                with st.spinner("Analysing document with GPT..."):
+                    img = Image.open(io.BytesIO(image.getvalue()))
+                    extracted_text = transform_image_to_text(img, img.format)
+                show_dialog()
             
 
     # Search functionality
