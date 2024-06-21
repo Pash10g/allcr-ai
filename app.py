@@ -8,6 +8,7 @@ import base64
 import openai
 import json
 from audio_recorder_streamlit import audio_recorder
+import filetype
 
 # OpenAI API key
 openai.api_key = os.environ.get("OPENAI_API_KEY")
@@ -278,6 +279,11 @@ else:
         is_audio=True
         audio_bytes = audio_recorder()
         if audio_bytes:
+            kind = filetype.guess(audio_bytes)
+            if kind is None:
+                st.warning("Cannot determine the audio format.")
+            else:
+                st.success(f"The recorded audio format is {kind.mime}.")
             audio_file = st.audio(audio_bytes, format="audio/wav")
             if st.button("Transcribe"):
                 if audio_file:
