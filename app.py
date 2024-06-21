@@ -9,6 +9,7 @@ import openai
 import json
 from audio_recorder_streamlit import audio_recorder
 import filetype
+import tempfile
 
 # OpenAI API key
 openai.api_key = os.environ.get("OPENAI_API_KEY")
@@ -164,24 +165,30 @@ def ai_chat(query,message):
 
     st.session_state.messages.append({"role": "assistant", "content": response})
     
-def transcribe_audio_and_store(audio_file):
+def transcribe_audio_and_store(audio_path):
+    audio_file= open(audio_path, "rb")
     response = openai.audio.transcriptions.create(
         model="whisper-1",
         file=audio_file
     )
-    transcript = response['text']
-    description = f"Transcription: {transcript}"
+
+    transcript = response.text
     document = {
-        'name' : 'Audio Transcribe',
-        'summary': transcript,
-        'description': description,
-        'type': 'audio_transcription'
+        'api_key': st.session_state.api_code,
+        'ocr' :{
+            'name' : f"Audio Transcribe of {transcript[:15]}...",
+            'summary': transcript,
+            'transcription': {'text' : transcript },
+            'type': 'audio_transcription'
+        },
+        'ai_tasks': []
     }    
 
+    # Save to MongoDB with embeddings
     response = openai.embeddings.create(
     input=json.dumps({
-        'name' : document['name'],
-        'summary' : document['summary']
+        'name' : document['ocr']['name'],
+        'summary' : document['ocr']['summary']
     }),
     model="text-embedding-3-small"
 )
@@ -191,6 +198,8 @@ def transcribe_audio_and_store(audio_file):
     document['embedding'] = gen_embeddings
 
     collection.insert_one(document)
+
+    st.rerun()
     
 
 def search_aggregation(search_query):
@@ -245,6 +254,18 @@ def vector_search_aggregation(search_query, limit):
     ]))
     return docs
 
+def show_previous_tasks(work_doc,st):
+    if 'ai_tasks' in work_doc and len(work_doc['ai_tasks']) > 0:
+        st.markdown("### Previous Tasks")
+        for task in work_doc['ai_tasks']:
+            with st.expander(f"Task: {task['prompt']}"):
+                text, markdown = st.tabs(["text", "markdown"])
+                with text:
+                    st.markdown(task['result'])
+                with markdown:
+                    st.code(task['result'])
+    else:
+        st.write("No previous tasks found.")
 
 # Main app logic
 if not st.session_state.authenticated:
@@ -266,9 +287,11 @@ else:
     tab_cam, tab_upl, tab_rec = st.tabs(["Camera", "Upload", "Record"])
     is_audio=False
     with tab_cam:
+        is_audio=False
         image = st.camera_input("Take a picture")
 
     with tab_upl:
+        is_audio=False
         uploaded_file = st.file_uploader("Choose a file")
         if uploaded_file is not None:
         # To read file as bytes:
@@ -287,6 +310,10 @@ else:
             audio_file = st.audio(audio_bytes, format="audio/wav")
             if st.button("Transcribe"):
                 if audio_file:
+                    # save as wav file
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as fp:
+                        fp.write(audio_bytes)
+                        audio_bytes = fp.name
                     transcribe_audio_and_store(audio_bytes)
                     st.success("Audio transcribed and saved to MongoDB")
 
@@ -315,29 +342,29 @@ else:
                                         'result' : result})
             # if st.button("Save Task to Document"):
         ## if length of array bigger than 0
-        if 'ai_tasks' in work_doc and len(work_doc['ai_tasks']) > 0:
-            st.markdown("### Previous Tasks")
-            for task in work_doc['ai_tasks']:
-                with st.expander(f"Task: {task['prompt']}"):
-                    text, markdown = st.tabs(["text", "markdown"])
-                    with text:
-                        st.markdown(task['result'])
-                    with markdown:
-                        st.code(task['result'])
-        else:
-            st.write("No previous tasks found.")
+        show_previous_tasks(work_doc, st)
+        # if 'ai_tasks' in work_doc and len(work_doc['ai_tasks']) > 0:
+        #     st.markdown("### Previous Tasks")
+        #     for task in work_doc['ai_tasks']:
+        #         with st.expander(f"Task: {task['prompt']}"):
+        #             text, markdown = st.tabs(["text", "markdown"])
+        #             with text:
+        #                 st.markdown(task['result'])
+        #             with markdown:
+        #                 st.code(task['result'])
+        # else:
+        #     st.write("No previous tasks found.")
                 
                 
                  
 
-    if not is_audio:
-        if st.button("Analyze image for MongoDB"):
-            if image is not None:
-                with st.spinner("Analysing document with GPT..."):
-                    img = Image.open(io.BytesIO(image.getvalue()))
-                    extracted_text = transform_image_to_text(img, img.format)
-                show_dialog()
-            
+    if st.button("Analyze image for MongoDB"):
+        if image is not None:
+            with st.spinner("Analysing document with GPT..."):
+                img = Image.open(io.BytesIO(image.getvalue()))
+                extracted_text = transform_image_to_text(img, img.format)
+            show_dialog()
+        
 
     # Search functionality
     with st.sidebar:
@@ -382,7 +409,7 @@ else:
         image_col, prompt_col = expander.columns(2)
         
         with image_col:
-            if expander.button("Show Image", key=f"{doc['_id']}-image"):
+            if expander.button("Show Image", key=f"{doc['_id']}-image") and 'image' in doc:
                 image_data = base64.b64decode(doc['image'])
                 image = Image.open(io.BytesIO(image_data))
                 expander.image(image, use_column_width=True)
@@ -390,5 +417,7 @@ else:
         with prompt_col:
             if expander.button("Run AI Prompt", key=f"{doc['_id']}-prompt"):
                show_prompt_dialog(doc)
+
+        
 
    
