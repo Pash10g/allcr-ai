@@ -300,21 +300,23 @@ else:
     with tab_rec:
         st.write("Record and Transcribe Audio")
         is_audio=True
-        audio_bytes = audio_recorder()
+        audio_bytes = audio_recorder(energy_threshold=-1.0)
         if audio_bytes:
             kind = filetype.guess(audio_bytes)
             if kind is None:
                 st.warning("Cannot determine the audio format.")
             else:
                 st.success(f"The recorded audio format is {kind.mime}.")
+               
             audio_file = st.audio(audio_bytes, format="audio/wav")
+ 
             if st.button("Transcribe"):
                 if audio_file:
                     # save as wav file
                     with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as fp:
                         fp.write(audio_bytes)
                         audio_bytes = fp.name
-                    with st.spinner("Transcribing audio..."):
+                    with st.spinner("Transcribing audio and storing..."):
                         transcribe_audio_and_store(audio_bytes)
 
     @st.experimental_dialog("Processed Document",width="large")
@@ -409,10 +411,11 @@ else:
         image_col, prompt_col = expander.columns(2)
         
         with image_col:
-            if expander.button("Show Image", key=f"{doc['_id']}-image") and 'image' in doc:
-                image_data = base64.b64decode(doc['image'])
-                image = Image.open(io.BytesIO(image_data))
-                expander.image(image, use_column_width=True)
+            if 'image' in doc:
+                if expander.button("Show Image", key=f"{doc['_id']}-image"):
+                    image_data = base64.b64decode(doc['image'])
+                    image = Image.open(io.BytesIO(image_data))
+                    expander.image(image, use_column_width=True)
 
         with prompt_col:
             if expander.button("Run AI Prompt", key=f"{doc['_id']}-prompt"):
